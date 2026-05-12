@@ -1,3 +1,5 @@
+from os import name
+
 from pydantic import Field
 
 from mcp.server.fastmcp import FastMCP
@@ -37,8 +39,26 @@ def edit_doc_content(
     docs[doc_id] = docs[doc_id].replace(content_to_replace, new_content)
     return f"Document `{docs[doc_id]}` updated successfully."
 
-# TODO: Write a resource to return all doc id's
-# TODO: Write a resource to return the contents of a particular doc
+@mcp.resource(
+    "docs://documents",
+    mime_type="application/json",
+    name="list_doc_ids",
+    description="Return a list of all document IDs available in the system."
+)
+def list_doc_ids() -> list[str]:
+    return list(docs.keys())
+
+@mcp.resource(
+    "docs://documents/{doc_id}",
+    mime_type="text/plain",
+    name="get_doc_content",
+    description="Return the content of a document given its ID."
+)
+def get_doc_content(doc_id: str = Field(description="ID of the document to retrieve")) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Document with ID `{doc_id}' not found.")
+    return docs[doc_id]
+
 # TODO: Write a prompt to rewrite a doc in markdown format
 # TODO: Write a prompt to summarize a doc
 
