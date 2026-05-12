@@ -1,8 +1,10 @@
+from email.mime import base
 from os import name
 
 from pydantic import Field
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.prompts import base
 
 mcp = FastMCP("DocumentMCP", log_level="ERROR")
 
@@ -60,6 +62,24 @@ def get_doc_content(doc_id: str = Field(description="ID of the document to retri
     return docs[doc_id]
 
 # TODO: Write a prompt to rewrite a doc in markdown format
+@mcp.prompt(
+    name="format_doc_markdown",
+    description="Rewrites the document into markdown format"
+)
+def format_doc_markdown(doc_id: str = Field(description="ID of the document to rewrite")) -> list[base.Message]:
+    if doc_id not in docs:
+        raise ValueError(f"Document with ID '{doc_id}' not found.")
+    prompt = f"""
+Your goal is to rewrite the following document in markdown format.
+<document_id>
+{doc_id}
+</document_id>
+
+Add in headers, bullet points, tables, ect as necessary.  Feel free to add in formatting to make the document more readable.  
+Use the 'edit_doc_content' tool to update the document with the new markdown formatted content.  Only update the document if you have rewritten the content in markdown format and are ready to update the document.  If you want to rewrite the document in multiple steps, you can use the 'read_doc_content' tool to read the current content of the document, and then use that content to rewrite the document in markdown format.
+    """
+    return [base.UserMessage(prompt)]
+    
 # TODO: Write a prompt to summarize a doc
 
 
